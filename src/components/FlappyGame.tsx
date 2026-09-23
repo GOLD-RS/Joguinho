@@ -22,18 +22,26 @@ function saveBoard(rows: Row[]) {
   localStorage.setItem(KEY, JSON.stringify(rows));
 }
 
+// Inicialização lazy (roda 1x no client; no build estático o mesmo valor
+// nasce vazio no servidor, sem setState síncrono dentro de effect).
+function initialName(): string {
+  try {
+    return localStorage.getItem("faName") ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export default function FlappyGame() {
   const ref = useRef<HTMLCanvasElement>(null);
   const [over, setOver] = useState<GameOverStats | null>(null);
-  const [board, setBoard] = useState<Row[]>([]);
-  const [name, setName] = useState("");
+  const [board, setBoard] = useState<Row[]>(() => loadBoard());
+  const [name, setName] = useState(initialName);
   const [sent, setSent] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [armClear, setArmClear] = useState(false);
 
   useEffect(() => {
-    setName(localStorage.getItem("faName") ?? "");
-    setBoard(loadBoard());
     const stop = startGame(ref.current!, {
       onGameOver: (s) => {
         setOver(s);
