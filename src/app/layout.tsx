@@ -12,9 +12,11 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Flappy Aurora",
   },
+  // Relativos: com output:export + basePath, caminhos absolutos quebram
+  // na subpasta do GitHub Pages (/Joguinho/icons/... nao e /icons/...).
   icons: [
-    { rel: "icon", url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-    { rel: "apple-touch-icon", url: "/icons/icon-192.png" },
+    { rel: "icon", url: "./icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    { rel: "apple-touch-icon", url: "./icons/icon-192.png" },
   ],
 };
 
