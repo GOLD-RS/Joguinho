@@ -1,0 +1,21 @@
+# Next.js
+/node_modules
+/.next
+/out
+/.vercel
+*.tsbuildinfo
+
+# Env / segredos
+.env
+.env*.local
+
+# Build artefatos
+dist
+build
+*.log
+
+# Editor / SO
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
