@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 
+// Manifest estático: em "output: export" o Next exige a rota force-static.
+export const dynamic = "force-static";
+
 // Caminhos relativos (sem barra inicial) para o manifest funcionar em
 // qualquer raiz de hospedagem (GitHub Pages /Joguinho, Netlify em raiz...).
 export default function manifest(): MetadataRoute.Manifest {
