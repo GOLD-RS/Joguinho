@@ -8,6 +8,9 @@ navegador, sem servidor, sem banco, sem internet).
 
 ## Recursos
 
+- **PWA instalável e 100% offline** — manifest + service worker: adicione à
+  tela inicial do celular/desktop e jogue sem internet (funciona até no
+  modo avião).
 - **Física em passo fixo (120 Hz)** — mesma dificuldade em 60/90/120/144 Hz.
 - **Colisão círculo × retângulo** — justa mesmo nos cantos dos tubos.
 - **Power-ups:** escudo, câmera lenta, **ímã de fresta** (puxa ao centro).

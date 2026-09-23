@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { startGame, type GameOverStats } from "@/game/engine";
+import { registerSW } from "@/lib/registerSW";
 
 type Row = { id: number; name: string; score: number; maxCombo: number; perfects: number };
 
@@ -42,6 +43,7 @@ export default function FlappyGame() {
   const [armClear, setArmClear] = useState(false);
 
   useEffect(() => {
+    registerSW();
     const stop = startGame(ref.current!, {
       onGameOver: (s) => {
         setOver(s);
