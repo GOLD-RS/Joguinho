@@ -47,33 +47,35 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Check if GitHub Pages is available
-        id: pages-check
+      - name: Decide deploy target
+        id: check
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh api "repos/${GITHUB_REPOSITORY}/pages" >/dev/null 2>&1; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          VIS=$(gh api "repos/${GITHUB_REPOSITORY}" -q .visibility)
+          if [ "$VIS" = "public" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Repo público — publicando no GitHub Pages."
           else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::GitHub Pages não habilitado neste repo (privado + plano free não suportam Pages). O site estático portável está no artefato 'flappy-aurora-offline' deste run — baixe e publique em Netlify Drop (app.netlify.com/drop), Cloudflare Pages ou um repo público com Pages."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Repo $VIS. Pages via Actions exige repo público (ou plano pago). O build estático portável está no artefato 'flappy-aurora-offline' — baixe e publique em Netlify Drop, Cloudflare Pages ou um repo público."
           fi
       - uses: actions/checkout@v4
-        if: steps.pages-check.outputs.enabled == 'true'
+        if: steps.check.outputs.deploy == 'true'
       - uses: actions/setup-node@v4
-        if: steps.pages-check.outputs.enabled == 'true'
+        if: steps.check.outputs.deploy == 'true'
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-        if: steps.pages-check.outputs.enabled == 'true'
+        if: steps.check.outputs.deploy == 'true'
       - name: Build with Pages base path
-        if: steps.pages-check.outputs.enabled == 'true'
+        if: steps.check.outputs.deploy == 'true'
         run: PAGES_BASE=/${{ github.event.repository.name }} npm run build
       - uses: actions/upload-pages-artifact@v3
-        if: steps.pages-check.outputs.enabled == 'true'
+        if: steps.check.outputs.deploy == 'true'
         with:
           path: out
       - id: deployment
-        if: steps.pages-check.outputs.enabled == 'true'
+        if: steps.check.outputs.deploy == 'true'
         uses: actions/deploy-pages@v4
