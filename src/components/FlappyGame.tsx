@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { startGame, type GameOverStats } from "@/game/engine";
 import { registerSW } from "@/lib/registerSW";
+import Shop from "./Shop";
 
 type Row = { id: number; name: string; score: number; maxCombo: number; perfects: number };
 
@@ -35,6 +36,8 @@ function initialName(): string {
 
 export default function FlappyGame() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const ctrl = useRef<{ stop: () => void; pause: () => void; resume: () => void } | null>(null);
+  const [shopOpen, setShopOpen] = useState(false);
   const [over, setOver] = useState<GameOverStats | null>(null);
   const [board, setBoard] = useState<Row[]>(() => loadBoard());
   const [name, setName] = useState(initialName);
@@ -44,7 +47,7 @@ export default function FlappyGame() {
 
   useEffect(() => {
     registerSW();
-    const stop = startGame(ref.current!, {
+    const c = startGame(ref.current!, {
       onGameOver: (s) => {
         setOver(s);
         setSent(null);
@@ -52,8 +55,18 @@ export default function FlappyGame() {
       },
       onRestart: () => setOver(null),
     });
-    return stop;
+    ctrl.current = c;
+    return () => c.stop();
   }, []);
+
+  const openShop = () => {
+    ctrl.current?.pause();
+    setShopOpen(true);
+  };
+  const closeShop = () => {
+    setShopOpen(false);
+    ctrl.current?.resume();
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +90,17 @@ export default function FlappyGame() {
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#0b1e3a]">
       <canvas ref={ref} className="block h-screen w-screen touch-none" />
+      {/* botão flutuante da loja */}
+      {!shopOpen && (
+        <button
+          onClick={openShop}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="absolute right-3 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-xl border border-white/15 bg-[#0c1423]/85 px-3 py-2.5 text-sm font-extrabold text-yellow-300 shadow-xl backdrop-blur active:scale-95"
+        >
+          🛒 Loja
+        </button>
+      )}
+      {shopOpen && <Shop onClose={closeShop} />}
       {over && (
         <div
           className="absolute bottom-3 left-1/2 w-[min(92vw,440px)] -translate-x-1/2 rounded-2xl border border-white/15 bg-[#0c1423]/90 p-3 text-white shadow-2xl backdrop-blur"
