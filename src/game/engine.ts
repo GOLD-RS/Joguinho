@@ -82,11 +82,11 @@ addEventListener('resize',resize);resize();
 /* ==================== ÁUDIO ==================== */
 let AC: AudioContext | null=null,master: GainNode | null=null,muted=safeStorageGet('faMute')==='1';
 function resumeAudio(){
-  try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.9;master.connect(AC.destination);}
+  try{if(!AC){const AudioContextConstructor=window.AudioContext||(window as Window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;if(!AudioContextConstructor)return;AC=new AudioContextConstructor();master=AC.createGain();master.gain.value=0.9;master.connect(AC.destination);}
     if(AC.state==='suspended')AC.resume();}catch(e){}
 }
-function setMuted(m){muted=m;try{localStorage.setItem('faMute',m?'1':'0');}catch(e){}}
-function beep(f0,f1,dur,type,vol,delay){
+function setMuted(m: boolean){muted=m;try{localStorage.setItem('faMute',m?'1':'0');}catch(e){}}
+function beep(f0: number,f1: number,dur: number,type: OscillatorType,vol: number,delay=0){ 
   if(muted||!AC||!master)return;
   try{
     const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
@@ -96,7 +96,7 @@ function beep(f0,f1,dur,type,vol,delay){
     o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02);
   }catch(e){}
 }
-function noiseBurst(dur,vol,delay){
+function noiseBurst(dur: number,vol: number,delay=0){
   if(muted||!AC||!master)return;
   try{
     if(!noiseBuf){noiseBuf=AC.createBuffer(1,AC.sampleRate*0.5|0,AC.sampleRate);
