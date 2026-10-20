@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as meta from "./meta";
 
 /* ============================================================
@@ -25,6 +24,7 @@ export type GameOverStats = { score: number; best: number; perfects: number; max
 export type Hooks = { onGameOver: (s: GameOverStats) => void; onRestart: () => void };
 
 export function startGame(cv: HTMLCanvasElement, hooks: Hooks) {
+const safeStorageGet=(key)=>{try{return localStorage.getItem(key);}catch(e){return null;}};
 const ctx = cv.getContext('2d');
 const H=1280,GROUND=150,PLAY_BOT=H-GROUND,PW=92,PERFECT=0.18,STEP=1/120;
 let S=1,W=720,DPR=1,alive=true;
@@ -77,7 +77,7 @@ function resize(){
 addEventListener('resize',resize);resize();
 
 /* ==================== ÁUDIO ==================== */
-let AC=null,master=null,muted=localStorage.getItem('faMute')==='1';
+let AC=null,master=null,muted=safeStorageGet('faMute')==='1';
 function resumeAudio(){
   try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.9;master.connect(AC.destination);}
     if(AC.state==='suspended')AC.resume();}catch(e){}
@@ -124,7 +124,7 @@ const sHit=()=>{beep(350,30,0.25,'sawtooth',0.16);noiseBurst(0.1,0.14);beep(140,
 /* ==================== ESTADO ==================== */
 const bird={x:210,y:H/2,vy:0,r:22,rot:0,squash:1,wing:0,blink:0,nextBlink:2};
 let pipes=[],parts=[],pops=[];
-let state='menu',score=0,displayScore=0,combo=1,best=+(localStorage.getItem('faBest')||0)||meta.meta().best;
+let state='menu',score=0,displayScore=0,combo=1,best=+(safeStorageGet('faBest')||0)||meta.meta().best;
 let shieldOn=false,slowT=0,magnetT=0,doubleT=0,ghostT=0,shrinkT=0,invuln=0,deadT=0,newBest=false,pipesPassed=0,lastGapY=H*0.45;
 let statCoins=0;
 /* meta ao vivo: skin/trilha/loja/conquistas vivem em meta.ts; o engine
@@ -144,7 +144,7 @@ let shakeT=0,groundOff=0,tGlobal=0,scrollT=0;
 let held=false,hitstop=0,flashT=0,flashColor='#fff';
 let trailT=0,glideT=0,scorePulse=0,reported=false,levelBanner=0,level=1;
 let statPerfects=0,statMaxCombo=0,statPipes=0,statNear=0,statGhostPipes=0,statShieldUsed=0;
-let tutorialDone=localStorage.getItem('faT')==='1';
+let tutorialDone=safeStorageGet('faT')==='1';
 
 const clouds=[];for(let i=0;i<10;i++)clouds.push({f:Math.random(),y:50+Math.random()*530,sp:0.006+Math.random()*0.016,sz:0.6+Math.random()*0.7});
 const stars=[];for(let i=0;i<110;i++)stars.push({x:Math.random(),y:Math.random()*0.52,tw:Math.random()*6,sz:0.8+Math.random()*2.2});
@@ -417,16 +417,14 @@ function update(dt){
           combo=1;sScore(combo);scorePulse=0.6;
           addP({x:p.x+PW/2,y:p.gapY,vx:0,vy:0,life:0.35,max:0.35,size:3,color:'rgba(255,255,255,0.3)',grav:0,type:'ring',targetSize:60});
         }
-        let pts=combo;
         /* fantasma atravessou o tubo */
         if(ghostT>0)statGhostPipes++;
-        /* 2X ativo: dobra os pontos (inclusive bônus) */
-        if(doubleT>0){pts*=2;}
-        /* near-miss: passou colado na borda */
+        /* near-miss: passa perto da borda; o multiplicador 2X aplica uma vez ao total */
         const edge=p.gapH/2-Math.abs(bird.y-p.gapY)-bird.r;
-        if(!perfect&&edge<14){pts+=1;statNear++;sNear();
-          if(doubleT>0){pts*=2;}
+        const nearMiss=!perfect&&edge<14;
+        if(nearMiss){statNear++;sNear();
           pops.push({x:bird.x,y:bird.y+(bird.y<p.gapY?60:-60),text:'RASPANDO! +'+(doubleT>0?2:1),color:'#ff9df0',size:28,t:0.8,max:0.8,vy:-30});}
+        const pts=(combo+(nearMiss?1:0))*(doubleT>0?2:1);
         score+=pts;
         pops.push({x:Math.max(60,Math.min(W-60,bird.x+38)),y:bird.y-22,text:'+'+pts,color:perfect?'#ffd23e':'#fff',size:34,t:0.7,max:0.7,vy:-65});
         const nl=1+Math.floor(pipesPassed/10);
