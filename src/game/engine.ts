@@ -25,7 +25,7 @@ export type Hooks = { onGameOver: (s: GameOverStats) => void; onRestart: () => v
 
 export function startGame(cv: HTMLCanvasElement, hooks: Hooks) {
 const safeStorageGet=(key: string)=>{try{return localStorage.getItem(key);}catch(e){return null;}};
-const ctx = cv.getContext('2d');
+const ctx = cv.getContext('2d') as CanvasRenderingContext2D;
 if (!ctx) throw new Error('Canvas 2D is unavailable');
 const H=1280,GROUND=150,PLAY_BOT=H-GROUND,PW=92,PERFECT=0.18,STEP=1/120;
 let S=1,W=720,DPR=1,alive=true;
@@ -80,14 +80,14 @@ function resize(){
 addEventListener('resize',resize);resize();
 
 /* ==================== ÁUDIO ==================== */
-let AC=null,master=null,muted=safeStorageGet('faMute')==='1';
+let AC: AudioContext | null=null,master: GainNode | null=null,muted=safeStorageGet('faMute')==='1';
 function resumeAudio(){
   try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.9;master.connect(AC.destination);}
     if(AC.state==='suspended')AC.resume();}catch(e){}
 }
 function setMuted(m){muted=m;try{localStorage.setItem('faMute',m?'1':'0');}catch(e){}}
 function beep(f0,f1,dur,type,vol,delay){
-  if(muted||!AC)return;
+  if(muted||!AC||!master)return;
   try{
     const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
     o.type=type||'sine';o.frequency.setValueAtTime(f0,t);
@@ -97,7 +97,7 @@ function beep(f0,f1,dur,type,vol,delay){
   }catch(e){}
 }
 function noiseBurst(dur,vol,delay){
-  if(muted||!AC)return;
+  if(muted||!AC||!master)return;
   try{
     if(!noiseBuf){noiseBuf=AC.createBuffer(1,AC.sampleRate*0.5|0,AC.sampleRate);
       const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
