@@ -7,11 +7,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: ${{ github.event_name != 'pull_request' }}
@@ -22,8 +17,12 @@ jobs:
   # hospedagem free (Netlify Drop, Cloudflare Pages, GitHub Pages...).
   quality:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -46,6 +45,10 @@ jobs:
     needs: quality
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Decide deploy target
         id: check
