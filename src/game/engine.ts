@@ -268,7 +268,7 @@ function pressLogic(mx: number | undefined,my: number | undefined){
 const onDown=(e: PointerEvent)=>{e.preventDefault();held=true;pressLogic(e.clientX/S,e.clientY/S);};
 const onUp=()=>{held=false;};
 const onKey=(e: KeyboardEvent)=>{
-  if(e.target&&(e.target.tagName==='INPUT'))return;
+  if((e.target as HTMLElement | null)?.tagName==='INPUT')return;
   if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){if(!e.repeat){held=true;pressLogic(undefined,undefined);}e.preventDefault();}
   else if(e.code==='KeyM')setMuted(!muted);
   else if(e.code==='KeyP'||e.code==='Escape'){if(state==='playing'){state='paused';held=false;}else if(state==='paused')state='playing';}
@@ -533,7 +533,7 @@ function drawAurora(n: number){
   ctx.drawImage(offAura,0,0,offAura.width,offAura.height,0,0,W,offAura.height/ak);
   ctx.restore();
 }
-function drawCelestial(n){
+function drawCelestial(n: number){
   const cxp=W-170,cyp=190;
   if(n<0.98){
     ctx.globalAlpha=1-n;
@@ -567,7 +567,7 @@ function drawFireflies(n: number){
   }
   ctx.restore();
 }
-function drawClouds(n){
+function drawClouds(n: number){
   ctx.fillStyle=n>0.5?'rgba(190,200,230,0.35)':'rgba(255,255,255,0.82)';
   ctx.beginPath();
   for(const c of clouds){
@@ -579,7 +579,7 @@ function drawClouds(n){
   }
   ctx.fill();
 }
-function hill(amp,base,sp,ph,color){
+function hill(amp: number,base: number,sp: number,ph: number,color: string){
   ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,PLAY_BOT+10);
   const off=scrollT*sp;
   for(let x=0;x<=W+28;x+=28)ctx.lineTo(x,PLAY_BOT-base-amp*(0.5+0.5*Math.sin((x+off)*0.006+ph)));
@@ -590,7 +590,7 @@ function drawHills(){
   hill(105,35,26,1.3,'rgba(135,178,198,0.85)');
   hill(75,12,42,4.1,'rgba(105,158,138,0.92)');
 }
-function drawPipe(p){
+function drawPipe(p: Record<string, any>){
   const topH=p.gapY-p.gapH/2,botY=p.gapY+p.gapH/2;
   ctx.save();ctx.translate(p.x,0);
   if(p.dead)ctx.globalAlpha=Math.max(0,p.fade);
@@ -625,7 +625,7 @@ function drawPipe(p){
   }
   ctx.restore();
 }
-function drawPU(x,y,kind){
+function drawPU(x: number,y: number,kind: string){
   const bob=Math.sin(tGlobal*3+x*0.01)*8;
   ctx.save();ctx.translate(x,y+bob);
   const col=kind==='shield'?'#6ef2ff':kind==='slow'?'#ffcf5e':kind==='magnet'?'#ff8cd2':kind==='double'?'#ff5a7a':kind==='ghost'?'#7dff9a':'#8f8cff';
