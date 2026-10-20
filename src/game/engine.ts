@@ -160,10 +160,10 @@ function mixC(a: number[],b: number[],t: number){return 'rgb('+Math.round(a[0]+(
 function rr(x: number,y: number,w: number,h: number,r: number){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function addP(o: Record<string, any>){if(parts.length<400)parts.push(o);}
 function circRect(cx: number,cy: number,r: number,x: number,y: number,w: number,h: number){const nx=Math.max(x,Math.min(cx,x+w)),ny=Math.max(y,Math.min(cy,y+h));const dx=cx-nx,dy=cy-ny;return dx*dx+dy*dy<r*r;}
-function medal(s){return s>=100?['PLATINA','#e5f4ff','#9fc6e8']:s>=50?['OURO','#ffd23e','#c98d12']:s>=25?['PRATA','#e8ecf2','#9aa3b0']:s>=10?['BRONZE','#e59a5c','#9a5a2a']:null;}
+function medal(s: number){return s>=100?['PLATINA','#e5f4ff','#9fc6e8']:s>=50?['OURO','#ffd23e','#c98d12']:s>=25?['PRATA','#e8ecf2','#9aa3b0']:s>=10?['BRONZE','#e59a5c','#9a5a2a']:null;}
 /* escurece/clareia uma cor hex (#rrggbb) — f em (0,1] = multiplicador (com cache) */
-const shadeCache={};
-function shade(hex,f){
+const shadeCache: Record<string, string>={};
+function shade(hex: string,f: number){
   const key=hex+':'+f;
   const c=shadeCache[key];
   if(c)return c;
@@ -178,7 +178,7 @@ function shade(hex,f){
 let trailIdx=0;
 
 /* ==================== SPAWN ==================== */
-function spawnPipe(x){
+function spawnPipe(x: number){
   const gapH=430-Math.min(120,Math.floor(pipesPassed/10)*14);
   const raw=240+Math.random()*(PLAY_BOT-280-240);
   const gapY=Math.max(240,Math.min(850,Math.max(lastGapY-280,Math.min(lastGapY+280,raw))));
@@ -187,7 +187,7 @@ function spawnPipe(x){
   let amp=0;
   if(pipesPassed>=20&&Math.random()<Math.min(0.55,0.2+(pipesPassed-20)*0.01))amp=Math.min(110,40+(pipesPassed-20)*1.5);
   amp=Math.min(amp,gapY-200,860-gapY);if(amp<0)amp=0;
-  const p={x,baseY:gapY,gapY,gapH,amp,ph:Math.random()*6.28,scored:false,dead:false,pu:null};
+  const p: Record<string, any>={x,baseY:gapY,gapY,gapH,amp,ph:Math.random()*6.28,scored:false,dead:false,pu:null};
   const nPU=pipes.reduce((a,q)=>a+(q.pu?1:0),0);
   let hasPU=false;
   if(Math.random()<0.26&&nPU<2){
@@ -245,7 +245,7 @@ function die(){
 }
 
 /* ==================== ENTRADA ==================== */
-function hitBtn(mx,my,x,y){return mx!==undefined&&Math.hypot(mx-x,my-y)<52;}
+function hitBtn(mx: number | undefined,my: number | undefined,x: number,y: number){return mx!==undefined&&Math.hypot(mx-x,my-y)<52;}
 function flap(){
   bird.vy=-620;bird.squash=1.22;bird.wing=1;sFlap();
   for(let i=0;i<5;i++)addP({x:bird.x-16+Math.random()*10,y:bird.y+14+Math.random()*8,vx:-55-Math.random()*85,vy:35+Math.random()*65,
