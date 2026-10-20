@@ -245,13 +245,13 @@ function die(){
 }
 
 /* ==================== ENTRADA ==================== */
-function hitBtn(mx: number | undefined,my: number | undefined,x: number,y: number){return mx!==undefined&&Math.hypot(mx-x,my-y)<52;}
+function hitBtn(mx: number | undefined,my: number | undefined,x: number,y: number){return mx!==undefined&&my!==undefined&&Math.hypot(mx-x,my-y)<52;}
 function flap(){
   bird.vy=-620;bird.squash=1.22;bird.wing=1;sFlap();
   for(let i=0;i<5;i++)addP({x:bird.x-16+Math.random()*10,y:bird.y+14+Math.random()*8,vx:-55-Math.random()*85,vy:35+Math.random()*65,
     life:0.38,max:0.38,size:2.5+Math.random()*3,color:'rgba(255,255,255,0.65)',grav:90,type:'circle'});
 }
-function pressLogic(mx,my){
+function pressLogic(mx: number | undefined,my: number | undefined){
   resumeAudio();
   if(hitBtn(mx,my,W-64,64)){setMuted(!muted);held=false;return;}
   if(state==='playing'&&hitBtn(mx,my,64,64)){state='paused';held=false;return;}
@@ -265,15 +265,15 @@ function pressLogic(mx,my){
   }
   if(state==='playing')flap();
 }
-const onDown=(e)=>{e.preventDefault();held=true;pressLogic(e.clientX/S,e.clientY/S);};
+const onDown=(e: PointerEvent)=>{e.preventDefault();held=true;pressLogic(e.clientX/S,e.clientY/S);};
 const onUp=()=>{held=false;};
-const onKey=(e)=>{
+const onKey=(e: KeyboardEvent)=>{
   if(e.target&&(e.target.tagName==='INPUT'))return;
   if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){if(!e.repeat){held=true;pressLogic(undefined,undefined);}e.preventDefault();}
   else if(e.code==='KeyM')setMuted(!muted);
   else if(e.code==='KeyP'||e.code==='Escape'){if(state==='playing'){state='paused';held=false;}else if(state==='paused')state='playing';}
 };
-const onKeyUp=(e)=>{if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW')held=false;};
+const onKeyUp=(e: KeyboardEvent)=>{if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW')held=false;};
 const onVis=()=>{if(document.hidden&&state==='playing'){state='paused';held=false;}};
 cv.addEventListener('pointerdown',onDown,{passive:false});
 addEventListener('pointerup',onUp);addEventListener('pointercancel',onUp);
@@ -282,7 +282,7 @@ document.addEventListener('visibilitychange',onVis);
 addEventListener('blur',onVis);
 
 /* ==================== ATUALIZAÇÃO (passo fixo) ==================== */
-function update(dt){
+function update(dt: number){
   tGlobal+=dt;
   if(hitstop>0){hitstop-=dt;if(flashT>0)flashT-=dt;return;}
   if(shakeT>0)shakeT-=dt;
@@ -492,7 +492,7 @@ function drawSky(){
     skyCache.set(key,g);}
   ctx.fillStyle=g;ctx.fillRect(-60,-60,W+120,H+120);
 }
-function drawStars(n){
+function drawStars(n: number){
   if(n<0.04)return;
   ctx.fillStyle='#fff';
   for(const s of stars){
@@ -508,7 +508,7 @@ const AURORA_L=[
   {y:105,amp:60,f1:.005,f2:.003,s1:.4,s2:.3,c:'255,50,150',a:.06},
   {y:65,amp:45,f1:.006,f2:.004,s1:.25,s2:.35,c:'0,255,200',a:.05}
 ];
-function drawAurora(n){
+function drawAurora(n: number){
   if(n<0.08)return;
   const ac=offAura.getContext('2d');
   if(!ac)return;
@@ -554,7 +554,7 @@ function drawCelestial(n){
   }
   ctx.globalAlpha=1;
 }
-function drawFireflies(n){
+function drawFireflies(n: number){
   if(n<0.2)return;
   ctx.save();ctx.globalCompositeOperation='lighter';
   for(const f of fireflies){
