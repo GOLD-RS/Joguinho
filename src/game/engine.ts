@@ -984,7 +984,7 @@ function adjustPerf(){
   if(perfEma>0.028&&RS>0.6){RS=Math.max(0.6,Math.round((RS-0.1)*10)/10);resize();}
   else if(perfEma<0.015&&RS<1){RS=Math.min(1,Math.round((RS+0.1)*10)/10);resize();}
 }
-function frame(now){
+function frame(now: number){
   if(!alive)return;
   raf=requestAnimationFrame(frame);
   const t=now/1000;
