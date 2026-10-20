@@ -17,9 +17,20 @@ const shell = ["./", "./sw.js", "./icons/icon-192.png", "./icons/icon-512.png", 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
   e.waitUntil(
-    caches
-      .open(CACHE)
-      .then((c) => Promise.all(shell.map((u) => c.add(new URL(u, self.location.href)))))
+    caches.open(CACHE).then(async (c) => {
+      await Promise.all(shell.map((u) => c.add(new URL(u, self.location.href))));
+
+      // Cache the JS/CSS referenced by the exported page, so the first
+      // successful installation can also start offline without a reload.
+      const indexUrl = new URL("./", self.location.href);
+      const index = await c.match(indexUrl);
+      if (!index) throw new Error("App shell missing from cache");
+      const html = await index.text();
+      const assets = [...html.matchAll(/(?:src|href)=["']([^"']*\/_next\/static\/[^"']+)["']/g)]
+        .map(([, asset]) => new URL(asset, self.location.href))
+        .filter((url) => url.origin === self.location.origin);
+      await c.addAll([...new Set(assets.map((url) => url.href))]);
+    })
   );
 });
 
