@@ -166,10 +166,11 @@ export function refreshMeta(): void {
   // recarrega do storage (ex.: outra aba gastou moedas) e notifica
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null");
-    if (raw) _m = normalize(raw);
+    _m = normalize(raw || {});
   } catch {
-    /* ignore */
+    _m = normalize({});
   }
+  _ver++;
   emit();
 }
 
@@ -257,4 +258,11 @@ export function trailById(id: string): Trail | undefined {
 export function achRemaining(): Ach[] {
   const m = meta();
   return ACH.filter((a) => !m.ach.includes(a.id));
+}
+
+// Mantém o saldo e os cosméticos em dia quando outra aba altera o jogo.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (event) => {
+    if (event.key === KEY || event.key === null) refreshMeta();
+  });
 }
