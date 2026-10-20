@@ -20,8 +20,13 @@ function loadBoard(): Row[] {
   }
 }
 
-function saveBoard(rows: Row[]) {
-  localStorage.setItem(KEY, JSON.stringify(rows));
+function saveBoard(rows: Row[]): boolean {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(rows));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Inicialização lazy (roda 1x no client; no build estático o mesmo valor
@@ -43,6 +48,7 @@ export default function FlappyGame() {
   const [name, setName] = useState(initialName);
   const [sent, setSent] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  const [storageWarning, setStorageWarning] = useState(false);
   const [armClear, setArmClear] = useState(false);
 
   useEffect(() => {
@@ -79,12 +85,21 @@ export default function FlappyGame() {
       maxCombo: over.maxCombo,
       perfects: over.perfects,
     };
-    localStorage.setItem("faName", entry.name);
-    const next = [...board, entry].sort((a, b) => b.score - a.score).slice(0, 10);
-    saveBoard(next);
-    setBoard(next);
-    setSent(entry.id);
-    setBusy(false);
+    try {
+      let nameSaved = true;
+      try {
+        localStorage.setItem("faName", entry.name);
+      } catch {
+        nameSaved = false;
+      }
+      const next = [...board, entry].sort((a, b) => b.score - a.score).slice(0, 10);
+      const boardSaved = saveBoard(next);
+      setBoard(next);
+      setSent(entry.id);
+      setStorageWarning(!nameSaved || !boardSaved);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -112,7 +127,7 @@ export default function FlappyGame() {
             <button
               onClick={() => {
                 if (armClear) {
-                  saveBoard([]);
+                  setStorageWarning(!saveBoard([]));
                   setBoard([]);
                   setArmClear(false);
                 } else {
@@ -125,6 +140,11 @@ export default function FlappyGame() {
               {armClear ? "confirma?" : "limpar"}
             </button>
           </div>
+          {storageWarning && (
+            <p role="status" className="mb-2 text-xs text-amber-300">
+              O jogo continua, mas o navegador não conseguiu salvar seus dados neste aparelho.
+            </p>
+          )}
           {over.score > 0 && sent === null && (
             <form onSubmit={submit} className="mb-2 flex gap-2">
               <input
