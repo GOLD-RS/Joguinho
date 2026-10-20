@@ -24,21 +24,23 @@ export type GameOverStats = { score: number; best: number; perfects: number; max
 export type Hooks = { onGameOver: (s: GameOverStats) => void; onRestart: () => void };
 
 export function startGame(cv: HTMLCanvasElement, hooks: Hooks) {
-const safeStorageGet=(key)=>{try{return localStorage.getItem(key);}catch(e){return null;}};
+const safeStorageGet=(key: string)=>{try{return localStorage.getItem(key);}catch(e){return null;}};
 const ctx = cv.getContext('2d');
+if (!ctx) throw new Error('Canvas 2D is unavailable');
 const H=1280,GROUND=150,PLAY_BOT=H-GROUND,PW=92,PERFECT=0.18,STEP=1/120;
 let S=1,W=720,DPR=1,alive=true;
 
-let RS=1,perfEma=0.016,lastPerfAdj=0,noiseBuf=null;
+let RS=1,perfEma=0.016,lastPerfAdj=0,noiseBuf: AudioBuffer | null=null;
 const skyCache=new Map();
 const offVign=document.createElement('canvas');
 const offAura=document.createElement('canvas');
 const offGlow=document.createElement('canvas');
-let sunGrad=null,moonGrad=null,pipeG=null,shTop=null,shBot=null,coinG=null,puAura={};
+let sunGrad: CanvasGradient | null=null,moonGrad: CanvasGradient | null=null,pipeG: CanvasGradient | null=null,shTop: CanvasGradient | null=null,shBot: CanvasGradient | null=null,coinG: CanvasGradient | null=null,puAura: Record<string, CanvasGradient>={};
 function buildCaches(){
   const k=cv.height/H;
   offVign.width=cv.width;offVign.height=cv.height;
   const vc=offVign.getContext('2d');
+  if(!vc)return;
   const vg=vc.createRadialGradient(cv.width/2,cv.height/2,cv.width*0.25,cv.width/2,cv.height/2,Math.max(cv.width,cv.height)*0.78);
   vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.32)');
   vc.clearRect(0,0,cv.width,cv.height);vc.fillStyle=vg;vc.fillRect(0,0,cv.width,cv.height);
@@ -46,6 +48,7 @@ function buildCaches(){
   offAura.height=Math.max(2,Math.ceil(340*k*0.5));
   offGlow.width=offGlow.height=96;
   const gc=offGlow.getContext('2d');
+  if(!gc)return;
   gc.clearRect(0,0,96,96);
   const gg=gc.createRadialGradient(48,48,2,48,48,48);
   gg.addColorStop(0,'rgba(255,250,190,0.95)');gg.addColorStop(0.25,'rgba(255,246,160,0.35)');
@@ -508,6 +511,7 @@ const AURORA_L=[
 function drawAurora(n){
   if(n<0.08)return;
   const ac=offAura.getContext('2d');
+  if(!ac)return;
   const ak=offAura.width/W;
   ac.setTransform(ak,0,0,ak,0,0);
   ac.clearRect(0,0,W,340);
@@ -533,12 +537,12 @@ function drawCelestial(n){
   const cxp=W-170,cyp=190;
   if(n<0.98){
     ctx.globalAlpha=1-n;
-    ctx.fillStyle=sunGrad;ctx.beginPath();ctx.arc(cxp,cyp,165,0,6.283);ctx.fill();
+    ctx.fillStyle=sunGrad!;ctx.beginPath();ctx.arc(cxp,cyp,165,0,6.283);ctx.fill();
     ctx.fillStyle='#fff3b0';ctx.beginPath();ctx.arc(cxp,cyp,52,0,6.283);ctx.fill();
   }
   if(n>0.02){
     ctx.globalAlpha=n;
-    ctx.fillStyle=moonGrad;ctx.beginPath();ctx.arc(cxp,cyp,135,0,6.283);ctx.fill();
+    ctx.fillStyle=moonGrad!;ctx.beginPath();ctx.arc(cxp,cyp,135,0,6.283);ctx.fill();
     ctx.fillStyle='#f2efdc';ctx.beginPath();ctx.arc(cxp,cyp,46,0,6.283);ctx.fill();
     ctx.fillStyle='rgba(200,195,175,0.25)';
     for(const [dx,dy,r] of [[-12,-8,10],[15,12,7],[5,-18,5],[-20,15,6]]){ctx.beginPath();ctx.arc(cxp+dx,cyp+dy,r,0,6.283);ctx.fill();}
@@ -596,19 +600,19 @@ function drawPipe(p){
   ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(2,p.gapY-2,PW-4,4);
   ctx.strokeStyle='rgba(12,55,18,0.5)';ctx.lineWidth=2;
   if(topH>2){
-    ctx.fillStyle=pipeG;ctx.fillRect(7,-60,PW-14,topH+60);
+    ctx.fillStyle=pipeG!;ctx.fillRect(7,-60,PW-14,topH+60);
     ctx.fillStyle='rgba(255,255,255,0.13)';ctx.fillRect(14,-60,7,topH+60);
     ctx.fillStyle='rgba(0,0,0,0.08)';ctx.fillRect(PW-18,-60,7,topH+60);
     ctx.strokeRect(7,-60,PW-14,topH+60);
   }
   if(PLAY_BOT-botY>2){
-    ctx.fillStyle=pipeG;ctx.fillRect(7,botY,PW-14,PLAY_BOT-botY);
+    ctx.fillStyle=pipeG!;ctx.fillRect(7,botY,PW-14,PLAY_BOT-botY);
     ctx.fillStyle='rgba(255,255,255,0.13)';ctx.fillRect(14,botY,7,PLAY_BOT-botY);
     ctx.fillStyle='rgba(0,0,0,0.08)';ctx.fillRect(PW-18,botY,7,PLAY_BOT-botY);
     ctx.strokeRect(7,botY,PW-14,PLAY_BOT-botY);
   }
   for(const y of [topH-34,botY]){
-    ctx.fillStyle=pipeG;rr(0,y,PW,34,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle=pipeG!;rr(0,y,PW,34,7);ctx.fill();ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,0.12)';rr(5,y+4,PW-10,7,3);ctx.fill();
   }
   if(p.amp>0){/* marca de tubo móvel */
@@ -616,8 +620,8 @@ function drawPipe(p){
     for(const y of [topH-17,botY+17]){ctx.beginPath();ctx.moveTo(PW/2-8,y-4);ctx.lineTo(PW/2,y-10);ctx.lineTo(PW/2+8,y-4);ctx.moveTo(PW/2-8,y+4);ctx.lineTo(PW/2,y+10);ctx.lineTo(PW/2+8,y+4);ctx.fill();}
   }
   if(botY-topH>92){
-    ctx.translate(0,topH);ctx.fillStyle=shTop;ctx.fillRect(2,0,PW-4,38);
-    ctx.translate(0,botY-topH);ctx.fillStyle=shBot;ctx.fillRect(2,-38,PW-4,38);
+    ctx.translate(0,topH);ctx.fillStyle=shTop!;ctx.fillRect(2,0,PW-4,38);
+    ctx.translate(0,botY-topH);ctx.fillStyle=shBot!;ctx.fillRect(2,-38,PW-4,38);
   }
   ctx.restore();
 }
@@ -681,7 +685,7 @@ function drawCoin(x,y,ph){
   ctx.scale(1,1);ctx.fillStyle=puAura['coin'];ctx.beginPath();ctx.arc(0,0,34,0,6.283);ctx.fill();
   ctx.globalCompositeOperation='source-over';
   ctx.scale(Math.max(0.25,Math.abs(wob)),1);
-  ctx.fillStyle=coinG;ctx.beginPath();ctx.arc(0,0,14,0,6.283);ctx.fill();
+  ctx.fillStyle=coinG!;ctx.beginPath();ctx.arc(0,0,14,0,6.283);ctx.fill();
   ctx.strokeStyle='rgba(120,70,0,0.5)';ctx.lineWidth=1.5;ctx.stroke();
   ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=2;
   ctx.beginPath();ctx.arc(0,0,9,0,6.283);ctx.stroke();
@@ -694,7 +698,7 @@ function birdShape(){
   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(9,-8,6,0,6.283);ctx.fill();
   ctx.fillStyle='#232430';ctx.beginPath();ctx.arc(11,-8,3,0,6.283);ctx.fill();
 }
-let bodyG=null, bodyKey='';
+let bodyG: CanvasGradient | null=null, bodyKey='';
 function drawBird(){
   const b=bird;
   const wing=skinRef.wing,beak=skinRef.beak;
@@ -712,7 +716,7 @@ function drawBird(){
   ctx.fillStyle=shade(wing,0.5);ctx.beginPath();ctx.moveTo(0,7);ctx.lineTo(-11,17+tw*2);ctx.lineTo(-8,5);ctx.closePath();ctx.fill();
   ctx.restore();
   if(bodyKey!==skinRef.id){bodyKey=skinRef.id;bodyG=ctx.createRadialGradient(-8,-10,6,0,0,34);bodyG.addColorStop(0,skinRef.body[0]);bodyG.addColorStop(0.5,skinRef.body[1]);bodyG.addColorStop(1,skinRef.body[2]);}
-  ctx.fillStyle=bodyG;ctx.beginPath();ctx.ellipse(0,0,30,24,0,0,6.283);ctx.fill();
+  ctx.fillStyle=bodyG!;ctx.beginPath();ctx.ellipse(0,0,30,24,0,0,6.283);ctx.fill();
   ctx.strokeStyle='rgba(150,80,10,0.28)';ctx.lineWidth=2;ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,0.82)';ctx.beginPath();ctx.ellipse(2,10,17,10,0,0,6.283);ctx.fill();
   ctx.fillStyle='rgba(255,130,80,0.18)';ctx.beginPath();ctx.arc(8,4,8,0,6.283);ctx.fill();
