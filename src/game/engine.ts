@@ -106,10 +106,10 @@ function noiseBurst(dur: number,vol: number,delay=0){
     s.connect(g);g.connect(master);s.start(t,0,Math.min(dur,0.5));
   }catch(e){}
 }
-const vib=(p)=>{try{if(!muted&&navigator.vibrate)navigator.vibrate(p);}catch(e){}};
+const vib=(p: VibratePattern)=>{try{if(!muted&&navigator.vibrate)navigator.vibrate(p);}catch(e){}};
 const sFlap=()=>{beep(420+Math.random()*40,880,0.08,'triangle',0.09);noiseBurst(0.03,0.03);};
-const sScore=(c)=>{const b=600+c*80;beep(b,0,0.07,'sine',0.08);beep(b*1.5,0,0.09,'sine',0.07,0.05);};
-const sPerfect=(c)=>{
+const sScore=(c: number)=>{const b=600+c*80;beep(b,0,0.07,'sine',0.08);beep(b*1.5,0,0.09,'sine',0.07,0.05);};
+const sPerfect=(c: number)=>{
   const b=660+c*60;
   beep(b,0,0.07,'sine',0.09);beep(b*1.33,0,0.07,'sine',0.09,0.05);beep(b*2,0,0.14,'sine',0.1,0.1);
   if(c>=3)beep(b*3,0,0.18,'sine',0.09,0.18);
@@ -126,7 +126,7 @@ const sHit=()=>{beep(350,30,0.25,'sawtooth',0.16);noiseBurst(0.1,0.14);beep(140,
 
 /* ==================== ESTADO ==================== */
 const bird={x:210,y:H/2,vy:0,r:22,rot:0,squash:1,wing:0,blink:0,nextBlink:2};
-let pipes=[],parts=[],pops=[];
+let pipes: Array<Record<string, any>>=[],parts: Array<Record<string, any>>=[],pops: Array<Record<string, any>>=[];
 let state='menu',score=0,displayScore=0,combo=1,best=+(safeStorageGet('faBest')||0)||meta.meta().best;
 let shieldOn=false,slowT=0,magnetT=0,doubleT=0,ghostT=0,shrinkT=0,invuln=0,deadT=0,newBest=false,pipesPassed=0,lastGapY=H*0.45;
 let statCoins=0;
@@ -149,9 +149,9 @@ let trailT=0,glideT=0,scorePulse=0,reported=false,levelBanner=0,level=1;
 let statPerfects=0,statMaxCombo=0,statPipes=0,statNear=0,statGhostPipes=0,statShieldUsed=0;
 let tutorialDone=safeStorageGet('faT')==='1';
 
-const clouds=[];for(let i=0;i<10;i++)clouds.push({f:Math.random(),y:50+Math.random()*530,sp:0.006+Math.random()*0.016,sz:0.6+Math.random()*0.7});
-const stars=[];for(let i=0;i<110;i++)stars.push({x:Math.random(),y:Math.random()*0.52,tw:Math.random()*6,sz:0.8+Math.random()*2.2});
-const fireflies=[];for(let i=0;i<22;i++)fireflies.push({bx:Math.random(),by:0.18+Math.random()*0.52,ph:Math.random()*6.28,sp:0.12+Math.random()*0.38,sz:1.2+Math.random()*2.5});
+const clouds: Array<{f: number;y: number;sp: number;sz: number}>=[];for(let i=0;i<10;i++)clouds.push({f:Math.random(),y:50+Math.random()*530,sp:0.006+Math.random()*0.016,sz:0.6+Math.random()*0.7});
+const stars: Array<{x: number;y: number;tw: number;sz: number}>=[];for(let i=0;i<110;i++)stars.push({x:Math.random(),y:Math.random()*0.52,tw:Math.random()*6,sz:0.8+Math.random()*2.2});
+const fireflies: Array<{bx: number;by: number;ph: number;sp: number;sz: number}>=[];for(let i=0;i<22;i++)fireflies.push({bx:Math.random(),by:0.18+Math.random()*0.52,ph:Math.random()*6.28,sp:0.12+Math.random()*0.38,sz:1.2+Math.random()*2.5});
 
 /* ==================== UTILITÁRIOS ==================== */
 function pipeSpeed(){return 300+Math.min(240,pipesPassed*3);}
